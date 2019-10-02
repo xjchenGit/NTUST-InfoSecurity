@@ -198,9 +198,10 @@ class row_cipher(object):
 
         for i,c in enumerate(row_text):
             text[i % len(key)] += c.upper()
-        for i in range(m*n-len(plaintext)+1):
-            if i!=0:
-                text[-i] += self.alphbet[-i]
+
+        # for i in range(m*n-len(plaintext)+1):
+        #     if i!=0:
+        #         text[-i] += self.alphbet[-i]
 
         # Encryption
         Encrypttext=''
