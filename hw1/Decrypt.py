@@ -15,15 +15,19 @@ def die(*args):
 len(sys.argv) == 4 or die("Usage: ./decrypt.py [cipher] [key] [ciphertext]")
 
 cipher, key, ciphertext = sys.argv[1:]
+cipher in ['caesar', 'playfair', 'vernam', 'row', 'rail_fence'] or die("Unknown cipher:", cipher)
+
 ciphertext = ciphertext.upper()
 key = key.upper()
 
-if cipher == 'caesar':
+
+def caesar(key, ciphertext):
     key.isnumeric() or die("key should be integer for caesar cipher.")
     key = int(key)
-    plaintext = ''.join([chr((ord(c) - 65 - key) % 26 + 65) if c in uppercase else c for c in ciphertext])
+    return ''.join([chr((ord(c) - 65 - key) % 26 + 65) if c in uppercase else c for c in ciphertext])
 
-elif cipher == 'playfair':
+
+def playfair(key, ciphertext):
     seen = set()
     key = ''.join([c for c in key + uppercase if c in uppercase and not (c in seen or seen.add(c))])
     key = key.replace('I' if key.rindex('I') > key.rindex('J') else 'J', '')
@@ -39,31 +43,35 @@ elif cipher == 'playfair':
             plaintext += key_matrix[x_a][(y_a - 1) % 5] + key_matrix[x_b][(y_b - 1) % 5]
         else:
             plaintext += key_matrix[x_a][y_b] + key_matrix[x_b][y_a]
+    return plaintext
 
-elif cipher == 'vernam':
-    xor = lambda c, k: chr(((ord(c) - 65) ^ (ord(k) - 65)) + 65)
+
+def vernam(key, ciphertext):
+    def xor(c, k): return chr(((ord(c) - 65) ^ (ord(k) - 65)) + 65)
     plaintext = ''.join([xor(c, k) for c, k in zip(ciphertext, key)])
     for i, c in enumerate(ciphertext[len(key):]):
         plaintext += xor(c, plaintext[i])
+    return plaintext
 
-elif cipher == 'row':
+
+def row(key, ciphertext):
     key.isnumeric() or die("key should be integer for row transposition cipher.")
     size = ceil(len(ciphertext) / len(key))
     main_len = size * (len(ciphertext) % len(key))
-    ciphertext = wrap(ciphertext[:main_len], size) + wrap(ciphertext[main_len:], size - 1) 
-    plaintext = ''.join([''.join([ciphertext[int(k)-1].ljust(3, ' ')[i] for k in key]) for i in range(size)])
+    ciphertext = wrap(ciphertext[:main_len], size) + wrap(ciphertext[main_len:], size - 1)
+    return ''.join([''.join([ciphertext[int(k)-1].ljust(3, ' ')[i] for k in key]) for i in range(size)])
 
-elif cipher == 'rail_fence':
+
+def rail_fence(key, ciphertext):
     key.isnumeric() or die("key should be integer for row transposition cipher.")
     key = int(key)
     r = list(range(key))
     pattern = cycle(r + r[-2:0:-1])
     indexes = sorted(range(len(ciphertext)), key=lambda i: next(pattern))
     result = [''] * len(ciphertext)
-    for i, c in zip(indexes, ciphertext): result[i] = c
-    plaintext = ''.join(result)
+    for i, c in zip(indexes, ciphertext):
+        result[i] = c
+    return ''.join(result)
 
-else:
-    die("Unknown cipher:", cipher)
 
-print(plaintext.strip().lower())
+print(locals()[cipher](key, ciphertext))
