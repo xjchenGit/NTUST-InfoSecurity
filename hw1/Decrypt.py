@@ -4,6 +4,7 @@ import sys
 from string import ascii_uppercase as uppercase
 from textwrap import wrap
 from itertools import cycle
+from math import ceil
 
 
 def die(message):
@@ -48,9 +49,10 @@ elif cipher == 'vernam':
 
 elif cipher == 'row':
     key.isnumeric() or die("key should be integer for row transposition cipher.")
-    groups = len(ciphertext) // len(key)
-    ciphertext = wrap(ciphertext, len(ciphertext) // len(key))
-    plaintext = ''.join([''.join([ciphertext[int(k)-1][i] for k in key]) for i in range(groups)])
+    size = ceil(len(ciphertext) / len(key))
+    main_len = size*(len(ciphertext) % len(key))
+    ciphertext = wrap(ciphertext[:main_len], size) + wrap(ciphertext[main_len:], size - 1) 
+    plaintext = ''.join([''.join([ciphertext[int(k)-1].ljust(3, ' ')[i] for k in key]) for i in range(size)])
 
 elif cipher == 'rail_fence':
     key.isnumeric() or die("key should be integer for row transposition cipher.")
@@ -65,4 +67,4 @@ elif cipher == 'rail_fence':
 else:
     die("Unknown cipher: " + cipher)
 
-print(plaintext.lower())
+print(plaintext.strip().lower())
