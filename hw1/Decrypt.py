@@ -7,15 +7,14 @@ from itertools import cycle
 from math import ceil
 
 
-def die(message):
-    print(message)
+def die(*args):
+    print(*args)
     sys.exit(0)
 
 
 len(sys.argv) == 4 or die("Usage: ./decrypt.py [cipher] [key] [ciphertext]")
 
 cipher, key, ciphertext = sys.argv[1:]
-
 ciphertext = ciphertext.upper()
 key = key.upper()
 
@@ -26,8 +25,7 @@ if cipher == 'caesar':
 
 elif cipher == 'playfair':
     seen = set()
-    key = key + uppercase
-    key = ''.join([c for c in key if c in uppercase and not (c in seen or seen.add(c))])
+    key = ''.join([c for c in key + uppercase if c in uppercase and not (c in seen or seen.add(c))])
     key = key.replace('I' if key.rindex('I') > key.rindex('J') else 'J', '')
     key_matrix = wrap(key, 5)
     plaintext = ""
@@ -43,14 +41,15 @@ elif cipher == 'playfair':
             plaintext += key_matrix[x_a][y_b] + key_matrix[x_b][y_a]
 
 elif cipher == 'vernam':
-    plaintext = ''.join([chr(((ord(c) - 65) ^ (ord(k) - 65)) + 65) for c, k in zip(ciphertext, key)])
+    xor = lambda c, k: chr(((ord(c) - 65) ^ (ord(k) - 65)) + 65)
+    plaintext = ''.join([xor(c, k) for c, k in zip(ciphertext, key)])
     for i, c in enumerate(ciphertext[len(key):]):
-        plaintext += chr(((ord(c) - 65) ^ (ord(plaintext[i]) - 65)) + 65)
+        plaintext += xor(c, plaintext[i])
 
 elif cipher == 'row':
     key.isnumeric() or die("key should be integer for row transposition cipher.")
     size = ceil(len(ciphertext) / len(key))
-    main_len = size*(len(ciphertext) % len(key))
+    main_len = size * (len(ciphertext) % len(key))
     ciphertext = wrap(ciphertext[:main_len], size) + wrap(ciphertext[main_len:], size - 1) 
     plaintext = ''.join([''.join([ciphertext[int(k)-1].ljust(3, ' ')[i] for k in key]) for i in range(size)])
 
@@ -65,6 +64,6 @@ elif cipher == 'rail_fence':
     plaintext = ''.join(result)
 
 else:
-    die("Unknown cipher: " + cipher)
+    die("Unknown cipher:", cipher)
 
 print(plaintext.strip().lower())
