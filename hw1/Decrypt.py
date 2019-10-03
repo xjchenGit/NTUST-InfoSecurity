@@ -22,7 +22,7 @@ key = key.upper()
 
 
 def caesar(key, ciphertext):
-    key.isnumeric() or die("key should be integer for caesar cipher.")
+    key.isdigit() or die("key should be integer for caesar cipher.")
     key = int(key)
     return ''.join([chr((ord(c) - 65 - key) % 26 + 65) if c in uppercase else c for c in ciphertext])
 
@@ -55,7 +55,7 @@ def vernam(key, ciphertext):
 
 
 def row(key, ciphertext):
-    key.isnumeric() or die("key should be integer for row transposition cipher.")
+    key.isdigit() or die("key should be integer for row transposition cipher.")
     size = ceil(len(ciphertext) / len(key))
     main_len = size * (len(ciphertext) % len(key))
     ciphertext = wrap(ciphertext[:main_len], size) + wrap(ciphertext[main_len:], size - 1)
@@ -63,7 +63,7 @@ def row(key, ciphertext):
 
 
 def rail_fence(key, ciphertext):
-    key.isnumeric() or die("key should be integer for row transposition cipher.")
+    key.isdigit() or die("key should be integer for row transposition cipher.")
     key = int(key)
     r = list(range(key))
     pattern = cycle(r + r[-2:0:-1])
