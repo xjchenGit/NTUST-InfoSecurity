@@ -1,6 +1,6 @@
 #!/usr/bin/python
 import sys
-
+import string
 # Input: plaintext needs to be lowercase
 # Input: Ciphertext needs to be uppercase
 # Input: Key needs to be uppercase
@@ -12,17 +12,16 @@ class caeser_cipher(object):
     def caeser_cipher_encrypt(self):
         EncryptText = ""
         # transverse the plain text
-        for i in range(len(plaintext)):
-            Pchar = plaintext[i]
+        for ch in plaintext:
             # Encrypt lowercase characters in plain text
-            if (Pchar.islower()):
-                EncryptText += chr((ord(Pchar) - 97 + key) % 26 + 97)
-            # Encrypt space characters in plain text
-            elif(plaintext[i]==" "):
-                EncryptText += " "
+            if (ch.islower()):
+                EncryptText += chr((ord(ch) - 97 + key) % 26 + 97)
             # Encrypt uppercase characters in plain text
+            elif (ch.isupper()):
+                EncryptText += chr((ord(ch) - 65 + key) % 26 + 65)
+            # Encrypt other characters in plain text
             else:
-                EncryptText += chr((ord(Pchar) - 65 + key) % 26 + 65)
+                EncryptText+=ch
         return EncryptText.upper()
 # #check the above function
 
@@ -40,7 +39,7 @@ class caeser_cipher(object):
 
 key_table=['','','','','']
 # using alphabet without j
-alphabet = 'ABCDEFGHIKLMNOPQRSTUVWXYZ'
+alphbet='ABCDEFGHIKLMNOPQRSTUVWXYZ'
 def __init__(self,key,plaintext):
     self.key=''
     self.plaintext=''
@@ -61,7 +60,7 @@ def fill_matrix(key):
     # Delete duplicate letters
     new_key = del_duplicates(key)
     # create new alphabet
-    for ch in alphabet:
+    for ch in alphbet:
         if not ch in new_key:
             new_key+=ch
     # create the new matrix with new alphabet
@@ -80,6 +79,8 @@ def playfair_cipher_encrypt(key_table,plaintext):
     EncryptText = ''
     _plaintext=plaintext
     i=0
+    print(key_table)
+    
     if len(plaintext)%2!=0:
         _plaintext+='X'
 
@@ -107,7 +108,7 @@ def playfair_cipher_encrypt(key_table,plaintext):
                     if  x[0]==y[0]: # if in the same row
                         EncryptText += key_table[x[0]][(x[1]+1)%5] + key_table[y[0]][(y[1]+1)%5]
                     elif x[1]==y[1]: # if in the same cloumn
-                        EncryptText += key_table[(x[1]+1)%5][x[0]] + key_table[(y[1]+1)%5][y[0]]
+                        EncryptText += key_table[(x[0]+1)%5][x[1]] + key_table[(y[0]+1)%5][y[1]]
                     else: # if not in the same row or cloumn
                         EncryptText += key_table[x[0]][y[1]] + key_table[y[0]][x[1]]
                     break
@@ -126,22 +127,14 @@ def playfair_cipher_encrypt(key_table,plaintext):
 # fill_matrix(key)
 # print(playfair_cipher_encrypt(key_table,plaintext))
 
-# Vernam proposed the autokey system
 
+# Vernam proposed the autokey system
 #create vernam table
 class vernam_cipher(object):
-    alphbet='ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+    alphbet=string.ascii_uppercase
     def __init__(self,key,plaintext):
         self.key=''
         self.plaintext=''
-
-    def Get_Index_vc(self,ch):
-        index=-1
-        for ch2 in self.alphbet:
-            index+=1
-            if ch2==ch:
-                break
-        return index
 
     def vernam_encrypt(self,key,plaintext):
         # create the key
@@ -151,14 +144,12 @@ class vernam_cipher(object):
             if len(key)<len(plaintext):
                 key += ch
             ch=ch.upper()
-            x=self.Get_Index_vc(ch)
+            x=ord(ch)-65
             key=key.upper()
-            y=self.Get_Index_vc(key[i])
+            y=ord(key[i])-65
             i+=1
             ch_index=x^y
-            if ch_index>=26:
-                ch_index=ch_index%26
-            Encrypttext+= self.alphbet[ch_index]
+            Encrypttext += chr(ch_index+65)
         return Encrypttext.upper()
 
 # key = 'TEC'
@@ -170,7 +161,7 @@ class vernam_cipher(object):
 # print(vernam_cipher(key,plaintext))
 
 class row_cipher(object):
-    alphbet='ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+    alphbet=string.ascii_uppercase
     def __init__(self,key,plaintext):
         self.key=''
         self.plaintext=''
@@ -198,11 +189,6 @@ class row_cipher(object):
 
         for i,c in enumerate(row_text):
             text[i % len(key)] += c.upper()
-
-        # for i in range(m*n-len(plaintext)+1):
-        #     if i!=0:
-        #         text[-i] += self.alphbet[-i]
-
         # Encryption
         Encrypttext=''
         for _key in key_map.keys():
