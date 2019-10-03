@@ -12,7 +12,7 @@ def die(*args):
     sys.exit(0)
 
 
-len(sys.argv) == 4 or die("Usage: ./decrypt.py [cipher] [key] [ciphertext]")
+len(sys.argv) == 4 or die("Usage: ./Decrypt.py [cipher] [key] [ciphertext]")
 
 cipher, key, ciphertext = sys.argv[1:]
 cipher in ['caesar', 'playfair', 'vernam', 'row', 'rail_fence'] or die("Unknown cipher:", cipher)
@@ -74,4 +74,4 @@ def rail_fence(key, ciphertext):
     return ''.join(result)
 
 
-print(locals()[cipher](key, ciphertext))
+print(locals()[cipher](key, ciphertext).lower())
