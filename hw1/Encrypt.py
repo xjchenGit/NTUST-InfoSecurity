@@ -40,9 +40,6 @@ class caeser_cipher(object):
 key_table=['','','','','']
 # using alphabet without j
 alphbet='ABCDEFGHIKLMNOPQRSTUVWXYZ'
-def __init__(self,key,plaintext):
-    self.key=''
-    self.plaintext=''
 
 # delete duplicate letter
 def del_duplicates(key):
