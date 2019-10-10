@@ -79,7 +79,7 @@ def playfair_cipher_encrypt(key_table,plaintext):
     EncryptText = ''
     _plaintext=plaintext
     i=0
-    print(key_table)
+    # print(key_table)
     
     if len(plaintext)%2!=0:
         _plaintext+='X'

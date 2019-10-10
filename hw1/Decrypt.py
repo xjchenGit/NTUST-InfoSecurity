@@ -42,7 +42,7 @@ def playfair(key, ciphertext):
             plaintext += key_matrix[x_a][(y_a - 1) % 5] + key_matrix[x_b][(y_b - 1) % 5]
         else:
             plaintext += key_matrix[x_a][y_b] + key_matrix[x_b][y_a]
-    return plaintext
+    return plaintext.rstrip('X')
 
 
 def vernam(key, ciphertext):
@@ -55,10 +55,16 @@ def vernam(key, ciphertext):
 
 def row(key, ciphertext):
     key.isdigit() or die("key should be digits for row transposition cipher.")
-    size = ceil(len(ciphertext) / len(key))
-    main_len = size * (len(ciphertext) % len(key) or len(key))
-    ciphertext = wrap(ciphertext[:main_len], size) + wrap(ciphertext[main_len:], size - 1)
-    return ''.join([''.join([ciphertext[int(k)-1].ljust(3, ' ')[i] for k in key]) for i in range(size)]).strip()
+    key = list(map(int, key))
+    height = ceil(len(ciphertext) / len(key))
+    box = height * (len(ciphertext) % len(key) or len(key))
+    chunks = sorted([(height, k) if i < box/height else (height-1, k)
+                     for i, k in enumerate(key)], key=lambda c: c[1])
+    plaintext, pointer = ['']*len(key), 0
+    for chunk in chunks:
+        plaintext[chunk[1]-1] = ciphertext[pointer:pointer+chunk[0]].ljust(height, " ")
+        pointer += chunk[0]
+    return ''.join(map(lambda p: ''.join(p), zip(*[plaintext[k-1] for k in key])))
 
 
 def rail_fence(key, ciphertext):

@@ -1,5 +1,5 @@
 #!/bin/sh
-PLAINTEXT='doyourbestandthenletgo'
+PLAINTEXT=$1||'doyourbestandthenletgo'
 
 ./Decrypt.py caesar 5 `./Encrypt.py caesar 5 $PLAINTEXT`
 ./Decrypt.py playfair COMP  `./Encrypt.py playfair COMP $PLAINTEXT`
