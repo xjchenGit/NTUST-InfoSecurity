@@ -56,15 +56,14 @@ def vernam(key, ciphertext):
 def row(key, ciphertext):
     key.isdigit() or die("key should be digits for row transposition cipher.")
     key = list(map(int, key))
-    height = ceil(len(ciphertext) / len(key))
-    box = height * (len(ciphertext) % len(key) or len(key))
-    chunks = sorted([(height, k) if i < box/height else (height-1, k)
+    height, width = ceil(len(ciphertext) / len(key)), len(ciphertext) % len(key) or len(key)
+    chunks = sorted([(height, k) if i < width else (height-1, k)
                      for i, k in enumerate(key)], key=lambda c: c[1])
     plaintext, pointer = ['']*len(key), 0
-    for chunk in chunks:
-        plaintext[chunk[1]-1] = ciphertext[pointer:pointer+chunk[0]].ljust(height, " ")
-        pointer += chunk[0]
-    return ''.join(map(lambda p: ''.join(p), zip(*[plaintext[k-1] for k in key])))
+    for size, index in chunks:
+        plaintext[index-1] = ciphertext[pointer:pointer+size].ljust(height, " ")
+        pointer += size
+    return ''.join(map(lambda p: ''.join(p), zip(*[plaintext[k-1] for k in key]))).strip(' ')
 
 
 def rail_fence(key, ciphertext):
