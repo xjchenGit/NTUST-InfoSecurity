@@ -12,7 +12,7 @@ def die(*args):
     sys.exit(0)
 
 
-len(sys.argv) == 4 or die("Usage: ./decrypt.py [cipher] [key] [ciphertext]")
+len(sys.argv) == 4 or die("Usage: ./Decrypt.py [cipher] [key] [ciphertext]")
 
 cipher, key, ciphertext = sys.argv[1:]
 cipher in ['caesar', 'playfair', 'vernam', 'row', 'rail_fence'] or die("Unknown cipher:", cipher)
@@ -22,9 +22,8 @@ key = key.upper()
 
 
 def caesar(key, ciphertext):
-    key.isnumeric() or die("key should be integer for caesar cipher.")
-    key = int(key)
-    return ''.join([chr((ord(c) - 65 - key) % 26 + 65) if c in uppercase else c for c in ciphertext])
+    key.isdigit() or die("key should be integer for caesar cipher.")
+    return ''.join([chr((ord(c) - 65 - int(key)) % 26 + 65) if c in uppercase else c for c in ciphertext])
 
 
 def playfair(key, ciphertext):
@@ -43,7 +42,7 @@ def playfair(key, ciphertext):
             plaintext += key_matrix[x_a][(y_a - 1) % 5] + key_matrix[x_b][(y_b - 1) % 5]
         else:
             plaintext += key_matrix[x_a][y_b] + key_matrix[x_b][y_a]
-    return plaintext
+    return plaintext.rstrip('X')
 
 
 def vernam(key, ciphertext):
@@ -55,17 +54,21 @@ def vernam(key, ciphertext):
 
 
 def row(key, ciphertext):
-    key.isnumeric() or die("key should be integer for row transposition cipher.")
-    size = ceil(len(ciphertext) / len(key))
-    main_len = size * (len(ciphertext) % len(key))
-    ciphertext = wrap(ciphertext[:main_len], size) + wrap(ciphertext[main_len:], size - 1)
-    return ''.join([''.join([ciphertext[int(k)-1].ljust(3, ' ')[i] for k in key]) for i in range(size)])
+    key.isdigit() or die("key should be digits for row transposition cipher.")
+    key = list(map(int, key))
+    height, width = ceil(len(ciphertext) / len(key)), len(ciphertext) % len(key) or len(key)
+    chunks = sorted([(height, k) if i < width else (height-1, k)
+                     for i, k in enumerate(key)], key=lambda c: c[1])
+    plaintext, pointer = ['']*len(key), 0
+    for size, index in chunks:
+        plaintext[index-1] = ciphertext[pointer:pointer+size].ljust(height, " ")
+        pointer += size
+    return ''.join(map(lambda p: ''.join(p), zip(*[plaintext[k-1] for k in key]))).strip(' ')
 
 
 def rail_fence(key, ciphertext):
-    key.isnumeric() or die("key should be integer for row transposition cipher.")
-    key = int(key)
-    r = list(range(key))
+    key.isdigit() or die("key should be integer for row transposition cipher.")
+    r = list(range(int(key)))
     pattern = cycle(r + r[-2:0:-1])
     indexes = sorted(range(len(ciphertext)), key=lambda i: next(pattern))
     result = [''] * len(ciphertext)
@@ -74,4 +77,4 @@ def rail_fence(key, ciphertext):
     return ''.join(result)
 
 
-print(locals()[cipher](key, ciphertext))
+print(locals()[cipher](key, ciphertext).lower())

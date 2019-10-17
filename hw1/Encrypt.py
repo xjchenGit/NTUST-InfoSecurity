@@ -76,6 +76,11 @@ def playfair_cipher_encrypt(key_table,plaintext):
     EncryptText = ''
     _plaintext=plaintext
     i=0
+<<<<<<< HEAD
+=======
+    # print(key_table)
+    
+>>>>>>> 556c9b7f94a7dc92ca990e35bcbe6adb09cbcba8
     if len(plaintext)%2!=0:
         _plaintext+='X'
 
