@@ -1,9 +1,11 @@
 #!/usr/local/bin/python3
 import sys
 
+
 def die(*args):
     print(*args)
     sys.exit(0)
+
 
 PC1 = (
     57, 49, 41, 33, 25, 17, 9,
@@ -142,8 +144,8 @@ def decrypt(key, ciphertext):
         R2 = [R1[i] ^ round_key[i] for i in range(48)]
         R3 = []
         for i, key in enumerate(range(0, 48, 6)):
-            r = int(str(R2[key]) + str(R2[key + 5]), 2)
-            l = int(''.join(map(str, R2[key+1:key+5])), 2)
+            r = int('{}{}'.format(R2[key], R2[key + 5]), 2)
+            l = int('{}{}{}{}'.format(*R2[key + 1: key + 5]), 2)
             R3 += map(int, bin(SBoxes[i][r][l])[2:].rjust(4, '0'))
 
         t = [R3[P[i] - 1] for i in range(32)]
