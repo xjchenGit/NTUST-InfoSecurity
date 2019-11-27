@@ -1,9 +1,12 @@
 #!/usr/local/bin/python3.7
 #coding=utf-8
+import sys
+import re
 from PIL import Image
 from Crypto.Cipher import AES
 from Crypto.Random import get_random_bytes
 import struct
+
 ############# ECB CBC DIY##############
 
 MODE=AES.MODE_ECB
@@ -147,11 +150,12 @@ def convert_to_RGB(img_data):
     pixels = tuple(zip(r,g,b))
     return pixels
 
-def convert_to_ppm(filename,form):
-    length_of_form=len(form)
-    ppmPicture = "mypppm"+filename[:-length_of_form-1]+".ppm"
+def convert_to_ppm(filename):
+    length_of_form=len(filename.split('.')[1])
+    ppmPicture = "PPM_"+filename[:-length_of_form-1]+".ppm"
     im = Image.open(filename)
     im.save(ppmPicture)
+    return ppmPicture
 
 def test():
     pass
@@ -189,13 +193,43 @@ def test():
     # filename='A.png'
     # convert_to_ppm(filename,'png')
     # filename="asadaads.png"
+
+#test()
 ############ Main ###############
+
 def main():
-    filename = "./mypppmA.ppm"
-    key = get_random_bytes(16)
-    METHOD = "DIY"
-    process_image(filename,key,METHOD)
-test()
+    # filename = "./mypppmA.ppm"
+    # key = get_random_bytes(16)
+    # METHOD = "DIY"
+    # process_image(filename,key,METHOD)
+    try:
+        method = sys.argv[1]
+        pic = sys.argv[2]
+        pic=convert_to_ppm(pic)
+    except BaseException:
+        print("Command error!\n\n")
+        print("Please enter the command in the following format:\
+            \n'./encrypt.py command_number Picture_name'\
+            \n'./encrypt.py 0 xxxx.png'\n\
+            \nCommand Number:\
+            \n0:ECB mode\n1:CBC mode\n2:DIY mode")
+    else:
+        if (method=="0"):
+            filename = "./"+pic
+            key = get_random_bytes(16)
+            METHOD = "ECB"
+            process_image(filename,key,METHOD)
+        elif (method=="1"):
+            filename = "./"+pic
+            key = get_random_bytes(16)
+            METHOD = "CBC"
+            process_image(filename,key,METHOD)
+        elif (method=="2"):
+            filename = "./"+pic
+            key = get_random_bytes(16)
+            METHOD = "DIY"
+            process_image(filename,key,METHOD)
+
 if __name__=="__main__":
     #test()
     main()
