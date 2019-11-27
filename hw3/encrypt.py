@@ -209,7 +209,7 @@ def main():
     except BaseException:
         print("Command error!\n\n")
         print("Please enter the command in the following format:\
-            \n'./encrypt.py command_number Picture_name'\
+            \n'./encrypt.py command_number Picture_name',\
             \n'./encrypt.py 0 xxxx.png'\n\
             \nCommand Number:\
             \n0:ECB mode\n1:CBC mode\n2:DIY mode")
