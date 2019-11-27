@@ -1,11 +1,9 @@
 #!/usr/local/bin/python3.7
 #coding=utf-8
 import sys
-import re
 from PIL import Image
 from Crypto.Cipher import AES
 from Crypto.Random import get_random_bytes
-import struct
 
 ############# ECB CBC DIY##############
 
@@ -29,7 +27,7 @@ def CBC_encrypt(img_data,key,init_iv,mode=MODE):
     cipher_iv = b''+init_iv
     for i in range(0,len(padded_data),16):
         block=padded_data[i:i+16]
-        
+
         #iv
         bin_iv = byte_to_bit(cipher_iv[i:i+16])
         bin_block = byte_to_bit(block)
@@ -60,8 +58,6 @@ def DIY_encrypt(img_data,key,init_iv,mode=MODE):
         # xor
         xor_encoder = bit_to_byte(xor(bin_iv,bin_block,128))
 
-
-        
         #cipher
         ecb_cipher = AES.new(key,mode)
         encrypt_data = ecb_cipher.encrypt(xor_encoder)
@@ -75,14 +71,14 @@ def DIY_encrypt(img_data,key,init_iv,mode=MODE):
         cipher.extend(encrypt_data)
     return cipher
 
-def process_image(filename,key,method):
-         # Opens image and converts it to RGB format for PIL
+def process_image(filename,key,iv,method):
+    # Opens image and converts it to RGB format for PIL
      img = Image.open(filename)
      img_data = img.tobytes()
-     iv = get_random_bytes(16)
 
      filename_out = "_cipher_"
      img_format = "ppm"
+    
     # save orignal length of image data
      original_length = len(img_data)
      if method =="ECB":
@@ -91,8 +87,8 @@ def process_image(filename,key,method):
         new_img_data = convert_to_RGB(CBC_encrypt(img_data,key,iv)[:original_length])
      elif method =="DIY":
         new_img_data = convert_to_RGB(DIY_encrypt(img_data,key,iv)[:original_length])
+    
     # save encrypt image
-
      new_img = Image.new(img.mode, img.size)
      new_img.putdata(new_img_data)
      new_img.save(method+filename_out+filename[2:-4]+"."+img_format, img_format)
@@ -157,80 +153,37 @@ def convert_to_ppm(filename):
     im.save(ppmPicture)
     return ppmPicture
 
-def test():
-    pass
-    # # xor test
-    # print('################ xor ####################')
-    # x=bin(20)
-    # y=bin(24)
-    # #print(x,y)
-    # print(xor(x,y,5,is_bin=True))
-
-    # #byte_to_bit
-    # print('################ byte to bit ####################')
-    # s='adsasadasdsasd'.encode('ASCII')
-    # print(s)
-    # print(bytes_to_bit(s))
-
-    # print('################ bit to byte ####################')
-    # test_bin=bin(300222555222000000020000)
-    # print(test_bin)
-    # print(bit_to_byte(test_bin))
-
-    # print('################ padding and unpadding ####################')
-    # img_test=b'\x12'
-    # a=padding(img_test)
-    # print(a)
-    # print(unpadding(a))
-    # print('################ ECB ####################')
-    # key= "0123456789abcdef"
-    # bytes_key = string_to_byte(key)
-    # img_data=b"\x10\x20\x30\x40\x50\x60\x70\x80\x10\x20\x30\x40\x50\x60\x70\x80"
-    # print(img_data)
-    # encrypt_data=ECB_encrypt(img_data,bytes_key)
-    # print(encrypt_data)
-    # print('################ convert ECB ####################')
-    # filename='A.png'
-    # convert_to_ppm(filename,'png')
-    # filename="asadaads.png"
-
-#test()
 ############ Main ###############
 
 def main():
-    # filename = "./mypppmA.ppm"
-    # key = get_random_bytes(16)
-    # METHOD = "DIY"
-    # process_image(filename,key,METHOD)
     try:
+        # argvs
         method = sys.argv[1]
         pic = sys.argv[2]
+        str_key = sys.argv[3]
+        str_iv = sys.argv[4]
+
+        # pre-processing
+        key = string_to_byte(str_key)
+        iv = string_to_byte(str_iv)
         pic=convert_to_ppm(pic)
+        filename = "./"+pic
     except BaseException:
         print("Command error!\n\n")
         print("Please enter the command in the following format:\
-            \n'./encrypt.py command_number Picture_name',\
-            \n'./encrypt.py 0 xxxx.png'\n\
+            \n'./encrypt.py command_number Picture_name key iv',\
+            \n'./encrypt.py 0 xxxx.png 0123456789abcdef 0123456789abcdef'\n\
             \nCommand Number:\
             \n0:ECB mode\n1:CBC mode\n2:DIY mode")
     else:
         if (method=="0"):
-            filename = "./"+pic
-            key = get_random_bytes(16)
             METHOD = "ECB"
-            process_image(filename,key,METHOD)
         elif (method=="1"):
-            filename = "./"+pic
-            key = get_random_bytes(16)
             METHOD = "CBC"
-            process_image(filename,key,METHOD)
         elif (method=="2"):
-            filename = "./"+pic
-            key = get_random_bytes(16)
             METHOD = "DIY"
-            process_image(filename,key,METHOD)
+        process_image(filename,key,iv,METHOD)
 
 if __name__=="__main__":
-    #test()
     main()
 
