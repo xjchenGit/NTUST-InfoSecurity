@@ -2,7 +2,7 @@
 import sys
 # Permutation tables & SBoxes
 class DesEncrypt(object):
-    # Step1: Create 16 subkeys,each of which is 48-bits long
+    # Create 16 subkeys,each of which is 48-bits long
     PC1=(
         57, 49, 41, 33, 25, 17, 9,
         1,  58, 50, 42, 34, 26, 18,
@@ -23,7 +23,7 @@ class DesEncrypt(object):
         44, 49, 39, 56, 34, 53,
         46, 42, 50, 36, 29, 32
     )
-    # Step2: Encode each 64-bit block of data
+    # Encode each 64-bit block of data
     InitialPermutation = (
         58, 50, 42, 34, 26, 18, 10, 2,
         60, 52, 44, 36, 28, 20, 12, 4,
@@ -146,7 +146,7 @@ class DesEncrypt(object):
             round_keys[i]=(Ci,Di)
         del round_keys[0]
         
-        # #now form the keys from concatenated CiDi i<=i<=16 and by apllying PC2
+        #now form the keys from concatenated CiDi i<=i<=16 and by apllying PC2
         for i,(Ci,Di) in round_keys.items():
             Keyi = (Ci << 28) + Di
             round_keys[i] = self.permutation(Keyi,56,'PC2') # 56bits->48bits
