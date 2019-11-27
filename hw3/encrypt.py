@@ -4,9 +4,10 @@ from PIL import Image
 from Crypto.Cipher import AES
 from Crypto.Random import get_random_bytes
 import struct
-############# ECB CBC ##############
+############# ECB CBC DIY##############
 
 MODE=AES.MODE_ECB
+
 def ECB_encrypt(img_data,key,mode=MODE):
     """ Args: imag_data(bytes)，key(bytes) """
     cipher=[]
@@ -41,7 +42,7 @@ def CBC_encrypt(img_data,key,init_iv,mode=MODE):
         cipher.extend(encrypt_data)
     return cipher
 
-def CBC_encrypt(img_data,key,init_iv,mode=MODE):
+def DIY_encrypt(img_data,key,init_iv,mode=MODE):
     """ Args: imag_data(bytes)，key(bytes), iv(bytes) """
     cipher=[]
     padded_data = padding(img_data)
@@ -55,12 +56,19 @@ def CBC_encrypt(img_data,key,init_iv,mode=MODE):
         
         # xor
         xor_encoder = bit_to_byte(xor(bin_iv,bin_block,128))
+
+
         
         #cipher
         ecb_cipher = AES.new(key,mode)
         encrypt_data = ecb_cipher.encrypt(xor_encoder)
-        #print(len(encrypt_data))
-        cipher_iv+=encrypt_data
+
+        #next_iv
+        bin_xor_encoder = byte_to_bit(xor_encoder)
+        bin_encrypt_data = byte_to_bit(encrypt_data)
+        xor_next_encoder = bit_to_byte(xor(bin_xor_encoder, bin_encrypt_data, 128))
+
+        cipher_iv+=xor_next_encoder
         cipher.extend(encrypt_data)
     return cipher
 
@@ -70,7 +78,7 @@ def process_image(filename,key,method):
      img_data = img.tobytes()
      iv = get_random_bytes(16)
 
-     filename_out = "img_encrypted"
+     filename_out = "_cipher_"
      img_format = "ppm"
     # save orignal length of image data
      original_length = len(img_data)
@@ -78,11 +86,13 @@ def process_image(filename,key,method):
         new_img_data = convert_to_RGB(ECB_encrypt(img_data,key)[:original_length])
      elif method =="CBC":
         new_img_data = convert_to_RGB(CBC_encrypt(img_data,key,iv)[:original_length])
+     elif method =="DIY":
+        new_img_data = convert_to_RGB(DIY_encrypt(img_data,key,iv)[:original_length])
     # save encrypt image
 
      new_img = Image.new(img.mode, img.size)
      new_img.putdata(new_img_data)
-     new_img.save(filename_out+"."+img_format, img_format)
+     new_img.save(method+filename_out+filename[2:-4]+"."+img_format, img_format)
      new_img.show()
 
 ############ Utility function ###############
@@ -144,6 +154,7 @@ def convert_to_ppm(filename,form):
     im.save(ppmPicture)
 
 def test():
+    pass
     # # xor test
     # print('################ xor ####################')
     # x=bin(20)
@@ -177,13 +188,15 @@ def test():
     # print('################ convert ECB ####################')
     # filename='A.png'
     # convert_to_ppm(filename,'png')
-    #filename="asadaads.png"
-
+    # filename="asadaads.png"
+############ Main ###############
+def main():
     filename = "./mypppmA.ppm"
     key = get_random_bytes(16)
-    METHOD = "CBC"
+    METHOD = "DIY"
     process_image(filename,key,METHOD)
-
-############ Main ###############
 test()
+if __name__=="__main__":
+    #test()
+    main()
 
