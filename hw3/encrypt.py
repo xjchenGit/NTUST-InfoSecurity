@@ -1,118 +1,117 @@
 #!/usr/local/bin/python3.7
 #coding=utf-8
-import sys
+import sys,io
 from PIL import Image
 from Crypto.Cipher import AES
 from Crypto.Random import get_random_bytes
+MODE=AES.MODE_ECB
 
 ############# ECB CBC DIY##############
 
-MODE=AES.MODE_ECB
-
 def ECB_encrypt(img_data,key,mode=MODE):
     """ Args: imag_data(bytes)，key(bytes) """
-    cipher=[]
-    padded_data = padding(img_data)
-    for i in range(0,len(padded_data),16):
-        block=padded_data[i:i+16]
+    encrypt_data=b""
+    for i in range(0,len(img_data),16):
+        block=img_data[i:i+16]
         ecb_cipher = AES.new(key,mode)
-        encrypt_data = ecb_cipher.encrypt(block)
-        cipher.extend(encrypt_data)
-    return cipher
+        encrypt_data += ecb_cipher.encrypt(block)
+    return encrypt_data
 
 def CBC_encrypt(img_data,key,init_iv,mode=MODE):
     """ Args: imag_data(bytes)，key(bytes), iv(bytes) """
-    cipher=[]
-    padded_data = padding(img_data)
-    cipher_iv = b''+init_iv
-    for i in range(0,len(padded_data),16):
-        block=padded_data[i:i+16]
+    cipher = b""
+    encrypt_data = b""
+    for i in range(0,len(img_data),16):
+        #iv & xor
+        if i == 0:
+            iv_bit = byte_to_bit(init_iv)
+        else:
+            iv_bit = byte_to_bit(cipher)
+        in_bit= byte_to_bit(img_data[i:i+16])
+        xor_coder = bit_to_byte(xor(iv_bit, in_bit, 128))
 
-        #iv
-        bin_iv = byte_to_bit(cipher_iv[i:i+16])
-        bin_block = byte_to_bit(block)
-        
-        # xor
-        xor_encoder = bit_to_byte(xor(bin_iv,bin_block,128))
-        
-        #cipher
-        ecb_cipher = AES.new(key,mode)
-        encrypt_data = ecb_cipher.encrypt(xor_encoder)
-        #print(len(encrypt_data))
-        cipher_iv+=encrypt_data
-        cipher.extend(encrypt_data)
-    return cipher
+        # encrypt
+        ecb_cipher = AES.new(key, mode)
+        cipher = ecb_cipher.encrypt(xor_coder)
+        encrypt_data+=cipher
+    return encrypt_data
 
 def DIY_encrypt(img_data,key,init_iv,mode=MODE):
     """ Args: imag_data(bytes)，key(bytes), iv(bytes) """
-    cipher=[]
-    padded_data = padding(img_data)
-    cipher_iv = b''+init_iv
-    for i in range(0,len(padded_data),16):
-        block=padded_data[i:i+16]
-        
-        #iv
-        bin_iv = byte_to_bit(cipher_iv[i:i+16])
-        bin_block = byte_to_bit(block)
-        
-        # xor
-        xor_encoder = bit_to_byte(xor(bin_iv,bin_block,128))
-
-        #cipher
-        ecb_cipher = AES.new(key,mode)
-        encrypt_data = ecb_cipher.encrypt(xor_encoder)
+    cipher = b''
+    encrypt_data = b''
+    xor_next_encoder=b''
+    for i in range(0,len(img_data),16):
+        #iv & xor
+        if i == 0:
+            iv_bit = byte_to_bit(init_iv)
+        else:
+            iv_bit = byte_to_bit(xor_next_encoder)
+        in_bit= byte_to_bit(img_data[i:i+16])
+        xor_coder = bit_to_byte(xor(iv_bit, in_bit, 128))
+        # encrypt
+        ecb_cipher = AES.new(key, mode)
+        cipher = ecb_cipher.encrypt(xor_coder)
 
         #next_iv
-        bin_xor_encoder = byte_to_bit(xor_encoder)
-        bin_encrypt_data = byte_to_bit(encrypt_data)
+        bin_xor_encoder = byte_to_bit(xor_coder)
+        bin_encrypt_data = byte_to_bit(cipher)
         xor_next_encoder = bit_to_byte(xor(bin_xor_encoder, bin_encrypt_data, 128))
 
-        cipher_iv+=xor_next_encoder
-        cipher.extend(encrypt_data)
-    return cipher
+        # add encryption to list
+        encrypt_data+=cipher
+    return encrypt_data
 
 def process_image(filename,key,iv,method):
-    # Opens image and converts it to RGB format for PIL
-     img = Image.open(filename)
-     img_data = img.tobytes()
+    # image processing
+    filename_out = "_cipher_"
+    img_format = "ppm"
+    im = Image.open(filename)
+    input_file=open(filename,'rb')
+    input_data=input_file.read()
+    input_file.close()
 
-     filename_out = "_cipher_"
-     img_format = "ppm"
-    
-    # save orignal length of image data
-     original_length = len(img_data)
-     if method =="ECB":
-        new_img_data = convert_to_RGB(ECB_encrypt(img_data,key)[:original_length])
-     elif method =="CBC":
-        new_img_data = convert_to_RGB(CBC_encrypt(img_data,key,iv)[:original_length])
-     elif method =="DIY":
-        new_img_data = convert_to_RGB(DIY_encrypt(img_data,key,iv)[:original_length])
-    
-    # save encrypt image
-     new_img = Image.new(img.mode, img.size)
-     new_img.putdata(new_img_data)
-     new_img.save(method+filename_out+filename[2:-4]+"."+img_format, img_format)
-     new_img.show()
+    # get ppm header: {P6}\n {width} {height} \n{color} \n
+    splits = input_data.split(b"\n", 3)
+    data_for_encryption = splits[3]
+    style = splits[0]
+    size = splits[1]
+    color = splits[2]
+    padded_data = padding(data_for_encryption)
 
-############ Utility function ###############
+    original_length = len(input_data)
+    if method =="ECB":
+         new_img_data = ECB_encrypt(padded_data,key)
+         print("output:",len(new_img_data))
+    elif method =="CBC":
+         new_img_data = CBC_encrypt(padded_data,key,iv)
+    elif method =="DIY":
+         new_img_data = DIY_encrypt(padded_data,key,iv)
+         print("output:",len(new_img_data))
+
+    output_file = open('./'+method+filename_out+filename[2:-4]+"."+img_format, "wb")
+    output_file.write(b"\n".join([style, size, color, new_img_data]))
+    output_file.close()
+    im = Image.open('./'+method+filename_out+filename[2:-4]+"."+img_format)
+    im.show()
+
+############ Utility function ##############
 def string_to_byte(s):
     return s.encode('ASCII')
 
-def xor(x,y,length_of_xor,is_bin=False):
+def xor(x,y,length_of_xor):
     result = ""
     for i in range(0,length_of_xor):
         if ((x[i] == '0' and y[i] == '1') or (x[i] == '1' and y[i] == '0')):
             result += "1"
         else:
             result += "0"
-    if is_bin:
-        result=result[2:]
     return result
 
 def byte_to_bit(s):
     result = ""
     for i in range(0,len(s)):
-        b_bytes = bin(s[i])[2:-1]
+        b_bytes = bin(s[i]).replace('0b','')
         b_bytes = b_bytes.zfill(8)
         result += b_bytes
     return result
@@ -136,15 +135,6 @@ def unpadding(img_data):
     """ Args: img_data: input data must be bytes."""
     number_of_padding=(AES.block_size-len(img_data)%AES.block_size)
     return img_data[:-number_of_padding+1]
-
-def convert_to_RGB(img_data):
-    """
-    Args:
-        img_data:input data must be bytes.
-    """
-    r, g, b = tuple(map(lambda d: [img_data[i] for i in range(0,len(img_data)) if i % 3 == d], [0,1,2]))
-    pixels = tuple(zip(r,g,b))
-    return pixels
 
 def convert_to_ppm(filename):
     length_of_form=len(filename.split('.')[1])
@@ -186,4 +176,3 @@ def main():
 
 if __name__=="__main__":
     main()
-
