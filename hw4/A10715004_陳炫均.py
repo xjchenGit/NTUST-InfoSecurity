@@ -8,7 +8,8 @@ sys.setrecursionlimit(10000)
 def encrypt(plaintext, N, e):
     ciphertext = []
     for p in plaintext:
-        ciphertext.append(square_and_multiply(ord(p), e, N))
+        s_and_m = square_and_multiply(ord(p), e, N)
+        ciphertext.append(s_and_m)
 
     return ciphertext
 
@@ -16,7 +17,8 @@ def encrypt(plaintext, N, e):
 def decrypt(ciphertext, N, d):
     plaintext = ""
     for c in ciphertext:
-        plaintext += chr(square_and_multiply(c, d, N))
+        s_and_m = square_and_multiply(c, d, N)
+        plaintext += chr(s_and_m)
 
     return plaintext
 
