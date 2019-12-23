@@ -9,7 +9,6 @@ def key_generation(q_bits=160,p_bits=1024, is_prime = False):
     if not is_prime:
         S = random.getrandbits(20)
         q = pro_big_prime(q_bits)
-
         n = (p_bits-1) // q_bits
         b = (q >> 5) & 15
         C = 0
