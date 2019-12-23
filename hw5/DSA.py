@@ -14,18 +14,18 @@ def key_generation(q_bits=160,p_bits=1024, is_prime = False):
         C = 0
         N = 2
         V = {}
-        powb = pow(2, b)
-        powL1 = pow(2, p_bits-1)
+        pow1 = pow(2, b)
+        pow2 = pow(2, p_bits-1)
 
         while C < 4096:
             for k in range(0, n+1):
                 V[k] = sha_to_int(S + N + k)
-            W = V[n] % powb
+            W = V[n] % pow1
             for k in range(n-1, -1, -1):
                 W = (W << q_bits) + V[k]
-            X = W + powL1
+            X = W + pow2
             p = X-(X % (2 * q) - 1)
-            if(powL1 <= p and miller_rabin_test(p)):
+            if(pow2 <= p and miller_rabin_test(p)):
                 is_prime = True
                 break;
             C += 1
